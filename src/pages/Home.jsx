@@ -6,7 +6,7 @@ import Hero from "../components/home/Hero";
 import HowItWorks from "../components/home/HowItWorks";
 import SkinToneShowcase from "../components/home/SkinToneShowcase";
 import Statistics from "../components/home/Statistics";
-import Testimonials from "../components/home/Testimonials";
+
 
 const Home = () => {
   return (
@@ -18,7 +18,6 @@ const Home = () => {
       <SkinToneShowcase />
       <Benefits />
       <Statistics />
-      <Testimonials />
       <FAQ />
       <CTA />
     </>

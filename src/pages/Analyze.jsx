@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import SkinAnalysisShowcase from "../components/home/SkinAnalysisShowcase";
+import About from "./About";
 
 const steps = [
   "Detecting Face",
@@ -324,6 +325,7 @@ const Analyze = () => {
       <div>
         <SkinAnalysisShowcase/>
       </div>
+      <About/>
     </section>
   );
 };

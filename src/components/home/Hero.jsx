@@ -86,7 +86,7 @@ const Hero = () => {
               </Link>
 
               <Link
-                to="/guide"
+                to="/workflow"
                 className="px-8 py-4 rounded-2xl border border-gray-300 font-semibold hover:bg-white transition"
               >
                 How It Works
