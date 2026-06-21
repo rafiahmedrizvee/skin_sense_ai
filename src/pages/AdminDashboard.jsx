@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   AreaChart,
   Area,
@@ -22,11 +22,11 @@ import {
   Menu,
   Moon,
   Sun,
+  X,
+  TrendingUp,
 } from "lucide-react";
 
-/* ---------------- IMAGES (FIXED) ---------------- */
-/* 👉 Put images inside: src/assets/faces/ */
-
+/* IMAGES */
 import face1 from "../assets/images/face1.jpg";
 import face2 from "../assets/images/face2.jpg";
 import face3 from "../assets/images/face3.jpg";
@@ -34,13 +34,12 @@ import face4 from "../assets/images/face4.jpg";
 
 const faces = [face1, face2, face3, face4];
 
-/* ---------------- DATA ---------------- */
-
+/* DATA */
 const stats = [
   { title: "Total Users", value: "12,847", icon: Users },
   { title: "Skin Analyses", value: "48,291", icon: ScanFace },
   { title: "AI Accuracy", value: "97.8%", icon: ShieldCheck },
-  { title: "Today", value: "324", icon: Activity },
+  { title: "Today Active", value: "324", icon: Activity },
 ];
 
 const chartData = [
@@ -61,147 +60,164 @@ const pieData = [
 
 const COLORS = ["#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899"];
 
-const heatMap = [
-  [99, 98, 97, 95],
-  [97, 98, 96, 94],
-  [99, 99, 98, 97],
-  [95, 96, 94, 93],
-];
-
-const demographics = [
-  { group: "18-24", percentage: 35 },
-  { group: "25-34", percentage: 42 },
-  { group: "35-44", percentage: 16 },
-  { group: "45+", percentage: 7 },
-];
-
-/* ---------------- COMPONENT ---------------- */
-
 export default function AdminDashboard() {
   const [dark, setDark] = useState(true);
-  const [sidebar, setSidebar] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const dashboardRef = useRef(null);
 
+  /* WebSocket (ready for AI live data) */
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:5000");
-
-    ws.onmessage = (msg) => {
-      console.log("Live update:", JSON.parse(msg.data));
-    };
-
+    ws.onmessage = (msg) => console.log("Live:", JSON.parse(msg.data));
     return () => ws.close();
   }, []);
 
+  /* SAFE PDF EXPORT */
   const exportPDF = async () => {
-    const element = document.getElementById("dashboard");
-    const canvas = await html2canvas(element);
-    const img = canvas.toDataURL("image/png");
+    const canvas = await html2canvas(dashboardRef.current, {
+      scale: 2,
+      useCORS: true,
+    });
 
+    const img = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
-    pdf.addImage(img, "PNG", 0, 0, 210, 297);
+
+    const width = 210;
+    const height = (canvas.height * width) / canvas.width;
+
+    pdf.addImage(img, "PNG", 0, 0, width, height);
     pdf.save("ai-dashboard.pdf");
   };
 
   return (
     <div
-      id="dashboard"
-      className={`min-h-screen flex ${
-        dark ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-900"
+      ref={dashboardRef}
+      className={`min-h-screen flex flex-col md:flex-row font-sans transition ${
+        dark ? "bg-[#070A12] text-white" : "bg-slate-100 text-slate-900"
       }`}
     >
-      {/* BACKGROUND */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
+      {/* PREMIUM BACKGROUND */}
+      <div className="fixed inset-0 -z-10">
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-cyan-500/20 blur-[180px]" />
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/20 blur-[180px]" />
       </div>
 
-      {/* SIDEBAR */}
-      <div
-        className={`transition-all duration-300 ${
-          sidebar ? "w-64" : "w-20"
-        } bg-black/30 backdrop-blur-xl border-r border-white/10 p-4`}
-      >
-        <button onClick={() => setSidebar(!sidebar)} className="mb-6">
+      {/* MOBILE TOP BAR */}
+      <div className="md:hidden flex justify-between items-center px-4 py-3 border-b border-white/10 backdrop-blur-xl">
+        <button onClick={() => setSidebarOpen(true)}>
           <Menu />
         </button>
-
-        {["Dashboard", "Users", "Analytics", "AI Model", "Reports"].map(
-          (item) => (
-            <div
-              key={item}
-              className="p-3 my-2 rounded-xl hover:bg-cyan-500/10 cursor-pointer"
-            >
-              {sidebar ? item : item[0]}
-            </div>
-          )
-        )}
+        <h1 className="font-semibold tracking-wide">AI Vision Panel</h1>
+        <button onClick={() => setDark(!dark)}>
+          {dark ? <Sun /> : <Moon />}
+        </button>
       </div>
 
+      {/* SIDEBAR */}
+      <AnimatePresence>
+        {(sidebarOpen || typeof window !== "undefined") && (
+          <motion.aside
+            initial={{ x: -300 }}
+            animate={{ x: sidebarOpen ? 0 : 0 }}
+            exit={{ x: -300 }}
+            className="fixed md:static z-50 w-72 h-full bg-black/40 backdrop-blur-2xl border-r border-white/10 p-6"
+          >
+            <div className="md:hidden flex justify-end">
+              <button onClick={() => setSidebarOpen(false)}>
+                <X />
+              </button>
+            </div>
+
+            <h2 className="text-xl font-bold mb-6">Control Center</h2>
+
+            {["Dashboard", "Users", "Analytics", "AI Model", "Reports"].map(
+              (item) => (
+                <div
+                  key={item}
+                  className="p-3 rounded-xl hover:bg-cyan-500/10 cursor-pointer transition"
+                >
+                  {item}
+                </div>
+              )
+            )}
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
       {/* MAIN */}
-      <div className="flex-1 p-6">
+      <main className="flex-1 p-4 md:p-8 max-w-[1600px] mx-auto w-full space-y-6">
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between gap-4 md:items-center">
           <div>
-            <h1 className="text-3xl font-bold">AI Skin Tone Admin Dashboard</h1>
-            <p className="text-slate-400">
-              Real-time analytics & AI monitoring
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
+              AI Skin Intelligence Dashboard
+            </h1>
+            <p className="text-slate-400 text-sm mt-1">
+              Real-time machine learning analytics & insights
             </p>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={() => setDark(!dark)}
-              className="p-3 rounded-xl border"
+              className="p-3 rounded-xl border border-white/10"
             >
               {dark ? <Sun /> : <Moon />}
             </button>
 
             <button
               onClick={exportPDF}
-              className="px-4 py-2 bg-cyan-500 rounded-xl"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 font-medium"
             >
-              Export PDF
+              Export Report
             </button>
           </div>
         </div>
 
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* KPI STRIP */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((s, i) => {
             const Icon = s.icon;
             return (
               <motion.div
                 key={i}
-                whileHover={{ scale: 1.05 }}
-                className="p-5 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10"
+                whileHover={{ scale: 1.04 }}
+                className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl"
               >
-                <Icon className="mb-2 text-cyan-400" />
-                <p className="text-sm text-slate-400">{s.title}</p>
-                <h2 className="text-2xl font-bold">{s.value}</h2>
+                <Icon className="text-cyan-400 mb-2" />
+                <p className="text-xs text-slate-400">{s.title}</p>
+                <h2 className="text-xl md:text-2xl font-bold">{s.value}</h2>
               </motion.div>
             );
           })}
         </div>
 
         {/* CHARTS */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-            <h3 className="mb-4">Monthly Analysis Growth</h3>
-            <ResponsiveContainer width="100%" height={250}>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex justify-between mb-4">
+              <h3 className="font-semibold">AI Growth</h3>
+              <TrendingUp className="text-cyan-400" />
+            </div>
+
+            <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={chartData}>
                 <Tooltip />
                 <Area
+                  type="monotone"
                   dataKey="analyses"
                   stroke="#06b6d4"
                   fill="#06b6d4"
-                  fillOpacity={0.3}
+                  fillOpacity={0.25}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-            <h3 className="mb-4">Trend Line</h3>
-            <ResponsiveContainer width="100%" height={250}>
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+            <h3 className="font-semibold mb-4">Trend Analysis</h3>
+
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData}>
                 <Tooltip />
                 <Line
@@ -215,11 +231,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* PIE + HEATMAP */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-            <h3 className="mb-4">Skin Tone Distribution</h3>
-            <ResponsiveContainer width="100%" height={250}>
+        {/* PIE + IMAGES */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+            <h3 className="font-semibold mb-4">Skin Tone Distribution</h3>
+
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie data={pieData} dataKey="value" outerRadius={90}>
                   {pieData.map((_, i) => (
@@ -231,72 +248,24 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-            <h3 className="mb-4">AI Confidence Heatmap</h3>
-
-            <div className="grid grid-cols-4 gap-2">
-              {heatMap.flat().map((val, i) => (
-                <div
-                  key={i}
-                  className="h-14 flex items-center justify-center rounded-lg font-bold"
-                  style={{
-                    backgroundColor: `rgba(6,182,212,${val / 100})`,
-                  }}
-                >
-                  {val}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* DEMOGRAPHICS + IMAGES */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-            <h3 className="mb-4">User Demographics</h3>
-
-            {demographics.map((d, i) => (
-              <div key={i} className="mb-3">
-                <div className="flex justify-between">
-                  <span>{d.group}</span>
-                  <span>{d.percentage}%</span>
-                </div>
-
-                <div className="h-2 bg-slate-700 rounded-full">
-                  <div
-                    className="h-full bg-cyan-400 rounded-full"
-                    style={{ width: `${d.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* FIXED IMAGE SECTION */}
-          <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-            <h3 className="mb-4">Recent Uploads</h3>
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+            <h3 className="font-semibold mb-4">Recent AI Scans</h3>
 
             <div className="grid grid-cols-2 gap-3">
               {faces.map((img, i) => (
                 <img
                   key={i}
                   src={img}
-                  alt={`face-${i}`}
                   className="rounded-xl h-28 w-full object-cover hover:scale-105 transition"
-                  onError={(e) => {
-                    e.target.src =
-                      "https://via.placeholder.com/150?text=No+Image";
-                  }}
+                  alt="scan"
                 />
               ))}
             </div>
           </div>
         </div>
 
-        <div className="text-center text-slate-500 text-sm">
-          AI Dashboard running with real-time analytics system
-        </div>
-      </div>
+      
+      </main>
     </div>
   );
 }

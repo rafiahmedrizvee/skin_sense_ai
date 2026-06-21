@@ -14,6 +14,8 @@ const Navbar = () => {
     { name: "Dashboard", path: "/admin" },
   ];
 
+  
+
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="backdrop-blur-xl bg-white/70 border-b border-white/20 shadow-sm">
@@ -23,7 +25,7 @@ const Navbar = () => {
 
             {/* Logo */}
             <Link
-              to="/home"
+              to="/"
               className="flex items-center gap-3"
             >
               <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg">
