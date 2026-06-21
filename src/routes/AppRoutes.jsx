@@ -7,6 +7,8 @@ import Results from "../pages/Results";
 import Guide from "../pages/Guide";
 import Contact from "../pages/Contact";
 import SkinToneWorkflow from "../pages/SkinToneWorkflow";
+import AdminDashboard from "../pages/AdminDashboard";
+
 
 const AppRoutes = () => {
   return (
@@ -20,6 +22,7 @@ const AppRoutes = () => {
           <Route path="/guide" element={<Guide />} />
           <Route path="/workflow" element={<SkinToneWorkflow />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
       </Routes>
    

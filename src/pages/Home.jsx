@@ -1,3 +1,4 @@
+import UploadCard from "../components/analysis/UploadCard";
 import AIFeatures from "../components/home/AIFeatures";
 import Benefits from "../components/home/Benefits";
 import CTA from "../components/home/CTA";
@@ -13,6 +14,7 @@ const Home = () => {
     <>
      
       <Hero />
+      <UploadCard/>
       <HowItWorks />
       <AIFeatures />
       <SkinToneShowcase />
