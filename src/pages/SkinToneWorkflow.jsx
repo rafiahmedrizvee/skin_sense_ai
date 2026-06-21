@@ -325,7 +325,7 @@ const SkinToneWorkflow = () => {
 
           <div className="rounded-[32px] bg-gradient-to-r from-slate-900 to-blue-900 p-10">
 
-            <h2 className="text-4xl font-bold text-white mb-10">
+            <h2 className="md:text-4xl text-2xl font-bold text-white mb-10">
               Personalized Skincare Recommendations
             </h2>
 
